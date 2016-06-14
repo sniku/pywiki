@@ -1,0 +1,7 @@
+
+docopt==0.6.2
+requests==2.10.0
+
+# for copying stuff into clipboard (optional)
+# xsel
+
