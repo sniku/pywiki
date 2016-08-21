@@ -30,7 +30,7 @@ sudo python3 setup.py install
 
 create config file in `~/.config/wiki_client.conf`
 
-```bash
+```shell
 cat ~/.config/wiki_client.conf
 
 [defaults]
@@ -59,29 +59,29 @@ Ar this point article `my_article` will be opened in your text editor.
 If article doesn't exist, it will be created.
 
 #### Usage:
-```
-    wiki
-    wiki [go] <article_name>
-    wiki [go] <article_name> < stdin_file.txt
-    wiki append <article_name> <text>
-    wiki log <article_name> <text>
-    wiki cat <article_name>
-    wiki mv <article_name> <new_name>
-    wiki upload <filepath> [<alt_filename>]
-    wiki --help
+```shell
+wiki
+wiki [go] <article_name>
+wiki [go] <article_name> < stdin_file.txt
+wiki append <article_name> <text>
+wiki log <article_name> <text>
+wiki cat <article_name>
+wiki mv <article_name> <new_name>
+wiki upload <filepath> [<alt_filename>]
+wiki --help
 ```
 #### Interactive mode
     
 This goes to interactive mode:
 
-```
+```shell
 $ wiki
  Wiki command: go my_commands 
  Opening "my_commands"  # at this point your default editor is opened with the content of "my_commands"
  Saving "my_commands"
 ```
 #### Searching for a note
-```
+```shell
 $ wiki
 Wiki command: /IP  # this is shortcut for "search IP"
 Searching for "IP"
@@ -105,23 +105,23 @@ Opening "Network" # opens content of "Network" in your default editor
 By default mediawiki requires you to log-in before you can upload a file so fill in your username and password in the 
 config file first. 
     
-    `$ wiki upload ~/path/to/file.txt`
+`$ wiki upload ~/path/to/file.txt`
 
 #### Quick edits
 
 This is the a quick way to append short text to the end of your article:
 
-    `$ wiki append my_article "some text here"`
+`$ wiki append my_article "some text here"`
     
 It's great for integrating with other programs. You can run this for example in cron.
 
 There's alternative version if you want to append text from a text file:
 
-    `$ wiki my_article < ~/path/to/some_file.txt`
+`$ wiki my_article < ~/path/to/some_file.txt`
     
 There's also a logging function:
 
-    `$ wiki log my_article "I did a thing!"`
+`$ wiki log my_article "I did a thing!"`
     
 This results in appending something like this to the end of the article:
 
