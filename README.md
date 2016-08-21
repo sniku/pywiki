@@ -10,12 +10,11 @@ While standard web-interface is functional, you have to launch a browser and it 
 I find it much more convenient to use `$ wiki my_commands` or `$ wiki search IP` as shown below:
 
 #### Installation ####
-    
+pywiki supports both python2 and python3. If you have a choice, use python3.
+
 Recommended way is to use PyPI:
 ```shell
-sudo pip install pywiki
- # or
-sudo pip3 install pywiki
+sudo pip3 install pywiki  # or sudo pip install pywiki
 ```
 
 or, if you want to install from source:
@@ -23,7 +22,7 @@ or, if you want to install from source:
 ```shell
 git clone git@github.com:sniku/pywiki.git
 cd pywiki
-sudo python3 setup.py install
+sudo python3 setup.py install  # or sudo python2 setup.py install
 ```
 
 #### Configuration ####
