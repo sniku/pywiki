@@ -256,12 +256,12 @@ class PyWikiCommands(cmd.Cmd):
         else:
             # directly display the page
             # print(self.last_search_results)
-            if len(self.last_search_results) == 1: # and self.last_search_results[0]['what'] == 'perfect_match':
+            if len(self.last_search_results) == 1:
                 print('Perfect hit. Opening', self.last_search_query)
                 self.do_display_search_result(0)
             else:
                 for index, result in enumerate(self.last_search_results, start=1):
-                    print(index, result['title'], html2text.html2text(result['snippet']))
+                    print(index, result['title'], '\n', html2text.html2text(result['snippet']))
 
     def do_go(self, title):
         """ go to a specified page. Type "go <pagetitle>" """
