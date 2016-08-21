@@ -1,15 +1,20 @@
+from __future__ import print_function
+
 import datetime
 import os
 import os.path
 import sys
 import cmd
-import configparser
 import tempfile
 from subprocess import call
-from urllib.parse import urljoin
+
+if sys.version_info[0] >= 3:
+    import configparser
+else:
+    import ConfigParser as configparser
 
 import furl
-import html2text as html2text
+import html2text
 import requests
 
 CONFIG_FILE = os.path.expanduser('~/.config/wiki_client.conf')
@@ -25,7 +30,6 @@ class MediaWikiEditor(object):
             tmpfile.write(initial_content.encode('utf8'))
             tmpfile.flush()
             editor_with_args = settings['editor'].split(" ") + [tmpfile.name]
-            # print editor_with_args
             call(editor_with_args)
             tmpfile.flush()
             tmpfile.close()
@@ -60,7 +64,7 @@ class Settings(dict):
         self['editor'] = self.get('force_editor', None) or os.environ.get('EDITOR', 'vim')
 
         if self.get('mediawiki_url') and not self.get('mediawiki_api_url'):
-            self['mediawiki_api_url'] = urljoin(self['mediawiki_url'], 'api.php')
+            self['mediawiki_api_url'] = furl.furl(self['mediawiki_url']).join('api.php')
 
     def check_config_file(self):
         if not os.path.isfile(CONFIG_FILE):
@@ -95,7 +99,7 @@ class ApiClient(object):
         params.update(**kwargs)
         return params
 
-    def get_base_request(self, **kwargs) -> requests.Request:
+    def get_base_request(self, **kwargs):
         """
         creates a Request object with all the required headers set.
         Use this function to create new Requests.
@@ -113,7 +117,7 @@ class ApiClient(object):
 
         return req
 
-    def execute_request(self, request: requests.Request) -> requests.Response:
+    def execute_request(self, request):
         """
         Use this function to execute all Api requests
         """
@@ -121,7 +125,7 @@ class ApiClient(object):
         resp = self.session.send(prepared)
         return resp
 
-    def do_request(self, **request_kwargs) -> requests.Response:
+    def do_request(self, **request_kwargs):
         """
         Convenience function for creating and executing request in one go.
         """
@@ -183,7 +187,7 @@ class ApiClient(object):
     def get_token(self, title, token_type):
         article_url = self.get_url(action='query', prop='info', titles=title, intoken=token_type)
         resp = self.do_request(method='GET', url=article_url).json()
-        edit_token = list(resp['query']['pages'].values())[0]['edittoken']
+        edit_token = list(resp['query']['pages'].values())[0][token_type+'token']
         return edit_token
 
     def mv(self, title, new_title):
@@ -201,7 +205,7 @@ class ApiClient(object):
             return resp.json()['query']['search']
         raise Exception('Search failed', resp)
 
-    def get_page_content(self, title) -> tuple:
+    def get_page_content(self, title):
         article_url = self.get_url(action='query', prop='info|revisions', titles=title, rvprop='content',
                                    rvlimit=1, intoken='edit')
         resp = self.do_request(method='GET', url=article_url).json()
@@ -212,7 +216,7 @@ class ApiClient(object):
         edit_token = first_page['edittoken']
         return content, edit_token
 
-    def display_article(self, title) -> tuple:
+    def display_article(self, title):
         """
             Display article for given title in an EDITOR.
             Returns a tuple of (initial_content, new_content)
@@ -222,7 +226,7 @@ class ApiClient(object):
 
         return old_content, new_content, edit_token
 
-    def append_to_article(self, title, text_to_append) -> str:
+    def append_to_article(self, title, text_to_append): # -> str:
         page, edit_token = self.get_page_content(title)
         new_content = page + text_to_append
         return new_content, edit_token
@@ -231,7 +235,7 @@ class ApiClient(object):
 class PyWikiCommands(cmd.Cmd):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        cmd.Cmd.__init__(self, *args, **kwargs)  # not using super() here for python2 compatibility
         self.prompt = '\nWiki command: '
         self.api = ApiClient()
         self.last_search_query = None
@@ -252,7 +256,6 @@ class PyWikiCommands(cmd.Cmd):
             print('No results for "%s"' % self.last_search_query)
         else:
             # directly display the page
-            # print(self.last_search_results)
             if len(self.last_search_results) == 1:
                 print('Perfect hit. Opening', self.last_search_query)
                 self.do_display_search_result(0)
@@ -269,7 +272,7 @@ class PyWikiCommands(cmd.Cmd):
     def do_display_search_result(self, index):
         """ displays the article specified by the index in the search list  """
         try:
-            index = int(index) - 1 # we enumerated starting on 1
+            index = int(index) - 1  # we enumerated starting on 1
             hit = self.last_search_results[index]
             title = hit['title']
         except IndexError:
@@ -335,12 +338,12 @@ class PyWikiCommands(cmd.Cmd):
         if not line or len(line) == 0:
             return line
 
-        cmd = line.split()[0]
+        command = line.split()[0]
 
         if line.startswith('/'):
             line = 'search ' + line[1:]
-        elif cmd.isnumeric():
-            line = 'display_search_result ' + cmd
+        elif command.isdigit():
+            line = 'display_search_result ' + command
 
         return line
 
@@ -384,10 +387,10 @@ def run(args):
             m.do_go(args['<article_name>'])
             interactive = True
     elif args['upload']:
-            m.do_upload_file(args['<filepath>'], args['<alt_filename>'])
+        m.do_upload_file(args['<filepath>'], args['<alt_filename>'])
     else:
         interactive = True
 
     if interactive:
         # and go to interactive mode
-        a = m.cmdloop()
+        m.cmdloop()

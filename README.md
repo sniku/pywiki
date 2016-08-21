@@ -3,7 +3,8 @@ mediawiki_client
 
 This is very simple terminal interface (TUI) for managing personal mediawiki installation.
 
-I have a mediawiki installation on personal server for storing various notes, ranging from family addresses to code snippets, configuration files and commands I rarely use and can't remember.
+I have a mediawiki installation on personal server for storing various notes, ranging from family addresses to code 
+snippets, configuration files and commands I rarely use and can't remember.
 
 While standard web-interface is functional, you have to launch a browser and it takes numerous clicks to find anything. 
 I find it much more convenient to use **wiki my_commands** or **wiki search IP** as shown below:
@@ -82,7 +83,8 @@ This goes to interactive mode:
 
 #### Uploading a file
 
-By default mediawiki requires you to log-in before you can upload a file so fill in your username and password in the config file first. 
+By default mediawiki requires you to log-in before you can upload a file so fill in your username and password in the 
+config file first. 
     
     $ wiki upload ~/path/to/file.txt
 
