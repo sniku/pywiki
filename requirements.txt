@@ -1,7 +1,15 @@
 
 docopt==0.6.2
+
+# for making HTTP requests and handling session
 requests==2.10.0
+
+# for creating URLs
+furl==0.4.95
 
 # for copying stuff into clipboard (optional)
 # xsel
+
+# to parse html snippts
+html2text==2016.5.29
 
