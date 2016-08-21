@@ -23,6 +23,7 @@ setup(
     license='MIT License',
     description='A command line mediawiki client.',
     long_description=README,
+    url="https://github.com/sniku/pywiki",
     author='Pawel Suwala',
     author_email='pawel.suwala@gmail.com',
     classifiers=['Environment :: Console',
