@@ -1,5 +1,5 @@
-mediawiki_client
-================
+pywiki
+======
 
 This is very simple terminal interface (TUI) for managing personal mediawiki installation.
 
