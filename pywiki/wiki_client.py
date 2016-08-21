@@ -12,12 +12,10 @@ import furl
 import html2text as html2text
 import requests
 
-
 CONFIG_FILE = os.path.expanduser('~/.config/wiki_client.conf')
 
 
 class MediaWikiEditor(object):
-
     def open_article(self, initial_content, title=""):
         if title:  # sanitize for security
             title = "".join(x for x in title if x.isalnum())
@@ -214,7 +212,6 @@ class ApiClient(object):
         edit_token = first_page['edittoken']
         return content, edit_token
 
-
     def display_article(self, title) -> tuple:
         """
             Display article for given title in an EDITOR.
@@ -316,7 +313,6 @@ class PyWikiCommands(cmd.Cmd):
         """ rename article """
         self.api.mv(title, new_title)
 
-
     def do_upload_file(self, filepath, alt_filename=''):
         """
         Upload a new file
@@ -328,7 +324,6 @@ class PyWikiCommands(cmd.Cmd):
             # token = self.api.get_token(title, token_type='edit')
             uploaded_file_url = self.api.upload_file(filepath, alt_filename)
             print("File uploaded. {}".format(uploaded_file_url))
-
 
     def do_EOF(self, line):
         """ quit """
@@ -369,7 +364,6 @@ def run(args):
 
         if args['append']:
             if args['<text>']:
-                # append text to extisting article and save
                 text_to_append = args['<text>']
                 m.do_append_to_article_and_save(args['<article_name>'], text_to_append)
         elif args['log']:
@@ -393,7 +387,6 @@ def run(args):
             m.do_upload_file(args['<filepath>'], args['<alt_filename>'])
     else:
         interactive = True
-
 
     if interactive:
         # and go to interactive mode
