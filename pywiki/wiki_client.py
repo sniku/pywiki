@@ -303,7 +303,7 @@ class PyWikiCommands(cmd.Cmd):
         """
         now = "{:%Y-%m-%d %H:%M} ".format(datetime.datetime.now())
         text_to_log = now + text_to_log
-        self.append_to_article_and_save(page_name, text_to_log)
+        self.do_append_to_article_and_save(page_name, text_to_log)
 
     def do_cat(self, title):
         """
@@ -351,6 +351,7 @@ class PyWikiCommands(cmd.Cmd):
 
     def postloop(self):
         print()
+
 
 def run(args):
     m = PyWikiCommands()

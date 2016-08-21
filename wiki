@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+"""Mediawiki terminal client.
+Usage:
+  wiki
+  wiki [go] <article_name>
+  wiki [go] <article_name> < stdin_file.txt
+  wiki append <article_name> <text>
+  wiki log <article_name> <text>
+  wiki cat <article_name>
+  wiki mv <article_name> <new_name>
+  wiki upload <filepath> [<alt_filename>]
+  wiki --help
+"""
+
+VERSION = "0.2"
+
+import pywiki.wiki_client
+from docopt import docopt
+
+if __name__ == "__main__":
+    args = docopt(__doc__, version='Mediawiki client ' + VERSION)
+    pywiki.wiki_client.run(args)
