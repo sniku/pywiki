@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 
 """Mediawiki terminal client.
 Usage:
@@ -8,14 +8,13 @@ Usage:
   wiki_client append <article_name> <text>
   wiki_client log <article_name> <text>
   wiki_client cat <article_name>
-  wiki_client mv <article_name> <new_name> [--leave_redirect]
+  wiki_client mv <article_name> <new_name>
   wiki_client upload <filepath> [<alt_filename>]
   wiki_client --help
 """
 
-VERSION = "0.1"
+VERSION = "0.2"
 
-import sys
 import pywiki.wiki_client
 from docopt import docopt
 

@@ -1,3 +1,4 @@
+import datetime
 import os
 import os.path
 import sys
@@ -38,7 +39,6 @@ class MediaWikiEditor(object):
             os.unlink(tmpfile.name)
 
             return initial_content, edited_content
-
 
 
 class Settings(dict):
@@ -165,40 +165,70 @@ class ApiClient(object):
         """
         Creates new revision for a given article.
         """
-        url = self.get_url(action='edit', title=title)
-        context = self._get_context(url=url, text=content, token=token, summary='PyWiki edit')
-        resp = self.do_request(method='POST', data=context)
+        print("Saving {}.".format(title))
+        url = self.get_url(action='edit')
+        context = self._get_context(text=content, title=title, summary='PyWiki edit', token=token)
+        resp = self.do_request(method='POST', data=context, url=url)
         # TODO validate
 
-    def upload_file(self, filepath, token, alt_filename=None):
+    def upload_file(self, filepath, alt_filename=None):
         filename = alt_filename or os.path.split(filepath)[1]
         url = self.get_url(action='upload')
-        file_content = open(filepath, 'rb').read()
-        resp = self.do_request(method='POST', token=token, filename=filename, file=file_content)
+        file = open(filepath, 'rb')
+        token = self.get_token('files', 'edit')
+        context = self._get_context(filename=filename, token=token, ignorewarnings=True)
+        resp = self.do_request(method='POST', url=url, data=context, files={'file': file.read()})
+        uploaded_file_url = resp.json()['upload']['imageinfo']['url']
+        return uploaded_file_url
         # TODO validate
 
+    def get_token(self, title, token_type):
+        article_url = self.get_url(action='query', prop='info', titles=title, intoken=token_type)
+        resp = self.do_request(method='GET', url=article_url).json()
+        edit_token = list(resp['query']['pages'].values())[0]['edittoken']
+        return edit_token
+
+    def mv(self, title, new_title):
+        url = self.get_url(**{'action': 'move', 'from': title, 'to': new_title})
+        mv_token = self.get_token(title, token_type='move')
+        context = self._get_context(token=mv_token, noredirect=True)
+        resp = self.do_request(method='POST', url=url, data=context)
+        #TODO validate
+
     def search(self, phrase):
-        search_url = self.get_url(action='query', list='search', srsearch=phrase)
+        search_url = self.get_url(action='query', list='search', srsearch=phrase, srwhat='text')
         resp = self.do_request(method='GET', url=search_url)
+
         if resp.status_code == 200:
             return resp.json()['query']['search']
         raise Exception('Search failed', resp)
 
-    def get_page_content(self, title):
-        article_url = self.get_url(action='query', prop='revisions', titles=title, rvprop='content', rvlimit=1)
+    def get_page_content(self, title) -> tuple:
+        article_url = self.get_url(action='query', prop='info|revisions', titles=title, rvprop='content',
+                                   rvlimit=1, intoken='edit')
+        resp = self.do_request(method='GET', url=article_url).json()
+        first_page = list(resp['query']['pages'].values())[0]
+        content = ''
+        if 'revisions' in first_page:
+            content = first_page['revisions'][0]['*']
+        edit_token = first_page['edittoken']
+        return content, edit_token
 
-        resp = self.do_request(method='GET', url=article_url)
-        return list(resp.json()['query']['pages'].values())[0]['revisions'][0]['*']
 
-    def display_article(self, title) -> tuple(str, str):
+    def display_article(self, title) -> tuple:
         """
             Display article for given title in an EDITOR.
             Returns a tuple of (initial_content, new_content)
         """
-        page = self.get_page_content(title)
+        page, edit_token = self.get_page_content(title)
         old_content, new_content = self.editor.open_article(page, title)
 
-        return old_content, new_content
+        return old_content, new_content, edit_token
+
+    def append_to_article(self, title, text_to_append) -> str:
+        page, edit_token = self.get_page_content(title)
+        new_content = page + text_to_append
+        return new_content, edit_token
 
 
 class PyWikiCommands(cmd.Cmd):
@@ -225,13 +255,19 @@ class PyWikiCommands(cmd.Cmd):
             print('No results for "%s"' % self.last_search_query)
         else:
             # directly display the page
-            if len(self.last_search_results) == 1 and self.last_search_results[0]['what'] == 'perfect_match':
-                print('Opening', self.last_search_query)
-                self.do_go(self.last_search_results[0]['page_name'])
+            # print(self.last_search_results)
+            if len(self.last_search_results) == 1: # and self.last_search_results[0]['what'] == 'perfect_match':
+                print('Perfect hit. Opening', self.last_search_query)
+                self.do_display_search_result(0)
             else:
                 for index, result in enumerate(self.last_search_results, start=1):
                     print(index, result['title'], html2text.html2text(result['snippet']))
-                    # print(result['index'], result['title'], '\n\t', result['match'])
+
+    def do_go(self, title):
+        """ go to a specified page. Type "go <pagetitle>" """
+        old_content, new_content, edit_token = self.api.display_article(title)
+        if old_content != new_content:
+            self.api.save_article(title, new_content, edit_token)
 
     def do_display_search_result(self, index):
         """ displays the article specified by the index in the search list  """
@@ -243,10 +279,55 @@ class PyWikiCommands(cmd.Cmd):
             print('Wrong index - try again')
         else:
             print('Opening', title)
-            old_content, new_content = self.api.display_article(hit['title'])
-            if old_content != new_content:
-                self.api.save_article(title, new_content)
+            self.do_go(hit['title'])
 
+    def do_append_to_article_and_save(self, title, text_to_append):
+        """
+        appends text to the bottom of an article and saves
+        """
+        text_to_append = '\n' + text_to_append
+        new_content, edit_token = self.api.append_to_article(title, text_to_append)
+        self.api.save_article(title, new_content, edit_token)
+
+    def append_to_article_and_open(self, title, text_to_append):
+        text_to_append = '\n' + text_to_append
+        new_content, edit_token = self.api.append_to_article(title, text_to_append)
+        old_content, new_content = self.api.editor.open_article(new_content, title)
+
+        if old_content != new_content:
+            self.api.save_article(title, new_content, edit_token)
+
+    def do_log_and_save(self, page_name, text_to_log):
+        """
+        Log is the same as append, but it adds a datetime in front of the text
+        """
+        now = "{:%Y-%m-%d %H:%M} ".format(datetime.datetime.now())
+        text_to_log = now + text_to_log
+        self.append_to_article_and_save(page_name, text_to_log)
+
+    def do_cat(self, title):
+        """
+        simply print the content of the article
+        """
+        content, token = self.api.get_page_content(title)
+        print(content)
+
+    def do_mv(self, title, new_title):
+        """ rename article """
+        self.api.mv(title, new_title)
+
+
+    def do_upload_file(self, filepath, alt_filename=''):
+        """
+        Upload a new file
+        """
+        filepath = os.path.abspath(filepath)
+        if not os.path.exists(filepath):
+            print(u"File path \"{}\" doesn't exist - nothing uploaded".format(filepath))
+        else:
+            # token = self.api.get_token(title, token_type='edit')
+            uploaded_file_url = self.api.upload_file(filepath, alt_filename)
+            print("File uploaded. {}".format(uploaded_file_url))
 
 
     def do_EOF(self, line):
@@ -288,19 +369,18 @@ def run(args):
         if args['append']:
             if args['<text>']:
                 # append text to extisting article and save
-                text_to_append = args['<text>'].decode('utf8')
-                m.append_to_article_and_save(args['<article_name>'], text_to_append)
+                text_to_append = args['<text>']
+                m.do_append_to_article_and_save(args['<article_name>'], text_to_append)
         elif args['log']:
             if args['<text>']:
-                text_to_log = args['<text>'].decode('utf8')
-                m.log_and_save(args['<article_name>'], text_to_log)
+                text_to_log = args['<text>']
+                m.do_log_and_save(args['<article_name>'], text_to_log)
         elif args["mv"]:
-            m.mv(args['<article_name>'], args['<new_name>'], args['--leave_redirect'])
+            m.do_mv(args['<article_name>'], args['<new_name>'])
         elif stdin_data is not None:
-            stdin_data = stdin_data.decode('utf8')
             m.append_to_article_and_open(args['<article_name>'], stdin_data)
         elif args['cat']:
-            m.cat(args['<article_name>'])
+            m.do_cat(args['<article_name>'])
         elif args['<article_name>'][0] == "/":  # search
             m.do_search(args['<article_name>'][1:])
             interactive = True
