@@ -59,7 +59,7 @@ Ar this point article `my_article` will be opened in your text editor.
 If article doesn't exist, it will be created.
 
 #### Usage:
-```shell
+```
 wiki
 wiki [go] <article_name>
 wiki [go] <article_name> < stdin_file.txt
@@ -74,14 +74,14 @@ wiki --help
     
 This goes to interactive mode:
 
-```shell
+```
 $ wiki
  Wiki command: go my_commands 
  Opening "my_commands"  # at this point your default editor is opened with the content of "my_commands"
  Saving "my_commands"
 ```
 #### Searching for a note
-```shell
+```
 $ wiki
 Wiki command: /IP  # this is shortcut for "search IP"
 Searching for "IP"
