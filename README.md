@@ -9,7 +9,7 @@ snippets, configuration files and commands I rarely use and can't remember.
 While standard web-interface is functional, you have to launch a browser and it takes numerous clicks to find anything. 
 I find it much more convenient to use `$ wiki my_commands` or `$ wiki search IP` as shown below:
 
-#### Installation ####
+# Installation
 pywiki supports both python2 and python3. If you have a choice, use python3.
 
 Recommended way is to use PyPI:
@@ -25,9 +25,9 @@ cd pywiki
 sudo python3 setup.py install  # or sudo python2 setup.py install
 ```
 
-#### Configuration ####
+# Configuration
 
-create config file in `~/.config/wiki_client.conf`
+create a config file in `~/.config/wiki_client.conf`
 
 ```shell
 cat ~/.config/wiki_client.conf
@@ -48,8 +48,12 @@ MEDIAWIKI_PASSWORD: wikipassword
 HTTP_AUTH_USERNAME: httpauth_user
 HTTP_AUTH_PASSWORD: httpauth_password
 ```
+#### VIM syntax coloring
+If you happen to use `vim` as your editor, you may want to copy the vim 
+syntax coloring files for nicer editing experience.
+`cp -r pywiki/vim ~/.vim`
 
-#### Most common use case
+### Most common use case
 
 Most common use case is to open specific article for editing or viewing
 `$ wiki my_article`
@@ -57,7 +61,7 @@ Most common use case is to open specific article for editing or viewing
 Ar this point article `my_article` will be opened in your text editor.
 If article doesn't exist, it will be created.
 
-#### Usage:
+### Usage:
 ```
 wiki
 wiki [go] <article_name>
@@ -69,7 +73,7 @@ wiki mv <article_name> <new_name>
 wiki upload <filepath> [<alt_filename>]
 wiki --help
 ```
-#### Interactive mode
+### Interactive mode
     
 This goes to interactive mode:
 
