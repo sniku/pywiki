@@ -3,5 +3,4 @@ include requirements.txt
 include wiki
 include pywiki/__init__.py
 include pywiki/wiki_client.py
-
-ln -s README.md README
+recursive-include vim *
