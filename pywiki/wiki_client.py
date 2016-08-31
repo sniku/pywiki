@@ -7,6 +7,7 @@ import sys
 import cmd
 import tempfile
 from subprocess import call
+from collections import OrderedDict
 
 if sys.version_info[0] >= 3:
     import configparser
@@ -198,12 +199,20 @@ class ApiClient(object):
         #TODO validate
 
     def search(self, phrase):
-        search_url = self.get_url(action='query', list='search', srsearch=phrase, srwhat='text')
-        resp = self.do_request(method='GET', url=search_url)
+        results = OrderedDict()  # using ordered dict to skip duplicates and maintain order.
 
-        if resp.status_code == 200:
-            return resp.json()['query']['search']
-        raise Exception('Search failed', resp)
+        for what in ['title', 'text']:
+            search_url = self.get_url(action='query', list='search', srsearch=phrase, srwhat=what)
+            resp = self.do_request(method='GET', url=search_url)
+
+            if resp.status_code == 200:
+                for r in resp.json()['query']['search']:
+                    if r['title'] not in results:
+                        results[r['title']] = r
+            else:
+                raise Exception('Search failed', resp)
+
+        return results.values()
 
     def get_page_content(self, title):
         article_url = self.get_url(action='query', prop='info|revisions', titles=title, rvprop='content',
