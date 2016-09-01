@@ -13,7 +13,7 @@ Usage:
   wiki --help
 """
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 import pywiki.wiki_client
 from docopt import docopt

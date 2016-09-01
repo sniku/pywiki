@@ -212,7 +212,7 @@ class ApiClient(object):
             else:
                 raise Exception('Search failed', resp)
 
-        return results.values()
+        return list(results.values())
 
     def get_page_content(self, title):
         article_url = self.get_url(action='query', prop='info|revisions', titles=title, rvprop='content',
