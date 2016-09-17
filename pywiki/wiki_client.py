@@ -196,7 +196,7 @@ class ApiClient(object):
         mv_token = self.get_token(title, token_type='move')
         context = self._get_context(token=mv_token, noredirect=True)
         resp = self.do_request(method='POST', url=url, data=context)
-        #TODO validate
+        # TODO validate
 
     def search(self, phrase):
         results = OrderedDict()  # using ordered dict to skip duplicates and maintain order.
@@ -211,6 +211,21 @@ class ApiClient(object):
                         results[r['title']] = r
             else:
                 raise Exception('Search failed', resp)
+
+        return list(results.values())
+
+    def recently_updated_articles(self):
+        results = OrderedDict()  # using ordered dict to skip duplicates and maintain order.
+
+        search_url = self.get_url(action='query', list='recentchanges')
+        resp = self.do_request(method='GET', url=search_url)
+
+        if resp.status_code == 200:
+            for r in resp.json()['query']['recentchanges']:
+                if r['title'] not in results:
+                    results[r['title']] = r
+        else:
+            raise Exception('Request failed', resp)
 
         return list(results.values())
 
@@ -259,6 +274,12 @@ class PyWikiCommands(cmd.Cmd):
             print('Searching for', self.last_search_query)
         self.display_search_list()
 
+    def do_recent(self, *args, **kwargs):
+        """ Recently updated articles
+        """
+        self.last_search_results = self.api.recently_updated_articles()
+        self.display_search_list()
+
     def display_search_list(self):
         """ Display the last search result """
         if not self.last_search_results:
@@ -270,7 +291,8 @@ class PyWikiCommands(cmd.Cmd):
                 self.do_display_search_result(0)
             else:
                 for index, result in enumerate(self.last_search_results, start=1):
-                    print(index, result['title'], '\n', html2text.html2text(result['snippet']))
+                    snippet = '\n' + html2text.html2text(result['snippet']) if 'snippet' in result else ''
+                    print("{} {} {}".format(index, result['title'], snippet))
 
     def do_go(self, title):
         """ go to a specified page. Type "go <pagetitle>" """
@@ -397,6 +419,9 @@ def run(args):
             interactive = True
     elif args['upload']:
         m.do_upload_file(args['<filepath>'], args['<alt_filename>'])
+    elif args['recent']:
+        m.do_recent()
+        interactive = True
     else:
         interactive = True
 
