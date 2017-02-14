@@ -172,7 +172,11 @@ class ApiClient(object):
         url = self.get_url(action='edit')
         context = self._get_context(text=content, title=title, summary='PyWiki edit', token=token)
         resp = self.do_request(method='POST', data=context, url=url)
-        # TODO validate
+
+        # print(resp, resp.json())
+        if 'error' in resp.json():
+            return False
+        return True
 
     def upload_file(self, filepath, alt_filename=None):
         filename = alt_filename or os.path.split(filepath)[1]
@@ -298,7 +302,12 @@ class PyWikiCommands(cmd.Cmd):
         """ go to a specified page. Type "go <pagetitle>" """
         old_content, new_content, edit_token = self.api.display_article(title)
         if old_content != new_content:
-            self.api.save_article(title, new_content, edit_token)
+            success = self.api.save_article(title, new_content, edit_token)
+            if not success:
+                new_edit_token = self.api.get_token(title, token_type='edit')
+                success = self.api.save_article(title, new_content, new_edit_token)
+                if not success:
+                    print("Failed to save.")
 
     def do_display_search_result(self, index):
         """ displays the article specified by the index in the search list  """

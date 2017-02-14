@@ -14,7 +14,7 @@ Usage:
   wiki --help
 """
 
-VERSION = "0.3.3"
+VERSION = "0.3.4"
 
 import pywiki.wiki_client
 from docopt import docopt

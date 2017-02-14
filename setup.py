@@ -15,7 +15,7 @@ with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as f:
 
 setup(
     name='pywiki',
-    version='0.3.3',
+    version='0.3.4',
     install_requires=requirements,
     packages=find_packages(),
     scripts=["wiki"],
